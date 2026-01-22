@@ -231,7 +231,7 @@ export type QueryCtxWithTracer<DataModel extends GenericDataModel> =
 export type MutationCtxWithTracer<DataModel extends GenericDataModel> =
   GenericMutationCtx<DataModel> & {
     tracer: TraceAPI;
-    runTracedQuery: TracedFunction<"action">;
+    runTracedQuery: TracedFunction<"mutation">;
     runTracedMutation: TracedFunction<"mutation">;
   };
 
