@@ -1,12 +1,15 @@
 {
   "name": "convex-tracer",
   "description": "A Tracer component for Convex.",
-  "repository": "github:Moumen-io/convex-tracer",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Moumen-io/convex-tracer.git"
+  },
   "homepage": "https://github.com/Moumen-io/convex-tracer#readme",
   "bugs": {
     "url": "https://github.com/Moumen-io/convex-tracer/issues"
   },
-  "version": "0.1.1-alpha.0",
+  "version": "0.1.0",
   "license": "Apache-2.0",
   "keywords": [
     "convex",
