@@ -11,8 +11,8 @@ export const {
   internalTracedQuery,
   internalTracedMutation,
   tracer,
-} = new Tracer<DataModel>(components.tracer, {
-  retentionMinutes: 10.167,
+} = new Tracer<DataModel>(components.tracer as any, {
+  retentionMinutes: 0.167,
 });
 
 export const listTraces = query({

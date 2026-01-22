@@ -1,26 +1,3 @@
-/**
- * Convex tracing system with component-based architecture.
- *
- * Usage:
- * ```typescript
- * import { components } from "./_generated/api";
- * import { mutation, action } from "./_generated/server";
- * import { Tracer } from "@convex-dev/tracer";
- *
- * const tracer = new Tracer(components.tracer, {
- *   sampleRate: 0.1,
- *   preserveErrors: true,
- * });
- *
- * export const myMutation = tracer.tracedMutation({
- *   args: { name: v.string() },
- *   handler: async (ctx, args) => {
- *     ctx.tracer.info("Processing...");
- *     // ... your logic
- *   },
- * });
- * ```
- */
 import type { FunctionType } from "convex/server";
 import {
   actionGeneric,
@@ -38,13 +15,13 @@ import { v } from "convex/values";
 import type { ComponentApi } from "../component/_generated/component";
 import { statusValidator } from "../component/schema";
 import type { CompleteTrace, Trace } from "../component/types";
-import TracingAPI from "./api";
 import {
   executeTracedHandler,
   extractTraceContext,
   prepareLogArgs,
   setupTraceContext,
 } from "./helpers";
+import TracingAPI from "./tracer-api";
 import type {
   ActionCtxWithTracer,
   AnyFunctionReference,
@@ -406,7 +383,7 @@ export class Tracer<DataModel extends GenericDataModel> {
    *     const userId = await ctx.db.insert("users", { ...args.user });
    *     ctx.tracer.info("User added", { userId });
    *
-   *     ctx.tracer.withSpan("syncUser", async (span) => {
+   *     await ctx.tracer.withSpan("syncUser", async (span) => {
    *       span.info("Syncing user");
    *       // do something
    *       span.info("User synced");

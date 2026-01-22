@@ -14,7 +14,7 @@ import type {
   PropertyValidators,
   Validator,
 } from "convex/values";
-import type { TraceAPI } from "./api/types";
+import type { TraceAPI } from "./tracer-api/types";
 
 export type AnyFunctionReference = FunctionReference<any, any>;
 

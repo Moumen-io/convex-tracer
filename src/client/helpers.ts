@@ -1,7 +1,7 @@
 import type { GenericDataModel } from "convex/server";
 import type { ObjectType, PropertyValidators } from "convex/values";
 import type { ComponentApi } from "../component/_generated/component";
-import TracerAPI from "./api";
+import TracerAPI from "./tracer-api/index";
 import type {
   ArgsWithTraceContext,
   LogArgs,
@@ -184,8 +184,6 @@ export async function executeTracedHandler<
     }
 
     const result = await handler(enhancedCtx, args);
-
-    console.log("at result return", Date.now());
 
     if (config.onSuccess) {
       await config.onSuccess(enhancedCtx, args, result);

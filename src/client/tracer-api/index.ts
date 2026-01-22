@@ -86,57 +86,7 @@ export default class TracingAPI implements TraceAPI {
     spanName: string,
     fn: (span: SpanAPI) => Promise<T>,
   ): Promise<T> {
-    let childSpanId: string;
-    try {
-      childSpanId = await this.ctx.runMutation(this.component.lib.createSpan, {
-        traceId: this.traceId,
-        span: {
-          parentSpanId: this.spanId,
-          spanName,
-          source: "backend",
-          startTime: Date.now(),
-          status: "pending",
-        },
-      });
-    } catch (err) {
-      console.error("[Tracer] Failed to create child span:", err);
-      return await fn(this.createNoOpSpanAPI());
-    }
-
-    const spanAPI = this.createSpanAPI(childSpanId);
-    const startTime = Date.now();
-
-    try {
-      const result = await fn(spanAPI);
-      await this.ctx
-        .runMutation(this.component.lib.completeSpan, {
-          spanId: childSpanId,
-          endTime: Date.now(),
-          duration: Date.now() - startTime,
-          status: "success",
-        })
-        .catch((err) =>
-          console.error("[Tracer] Failed to complete span:", err),
-        );
-      return result;
-    } catch (error) {
-      await this.ctx
-        .runMutation(this.component.lib.completeSpan, {
-          spanId: childSpanId,
-          endTime: Date.now(),
-          duration: Date.now() - startTime,
-          status: "error",
-          error: error instanceof Error ? error.message : String(error),
-        })
-        .catch((err) =>
-          console.error("[Tracer] Failed to complete span with error:", err),
-        );
-
-      if (this.config.preserveErrors) {
-        this.preserve();
-      }
-      throw error;
-    }
+    return await this.createAndRunSpan(this.spanId, spanName, fn);
   }
 
   async updateMetadata(metadata: Record<string, any>): Promise<void> {
@@ -204,8 +154,71 @@ export default class TracingAPI implements TraceAPI {
             console.error("[Tracer] Failed to set child span metadata:", err),
           );
       },
-      withSpan: this.withSpan,
+      withSpan: async <T>(
+        spanName: string,
+        fn: (span: SpanAPI) => Promise<T>,
+      ): Promise<T> => {
+        return await this.createAndRunSpan(spanId, spanName, fn);
+      },
     };
+  }
+
+  private async createAndRunSpan<T>(
+    parentSpanId: string,
+    spanName: string,
+    fn: (span: SpanAPI) => Promise<T>,
+  ): Promise<T> {
+    let childSpanId: string;
+    try {
+      childSpanId = await this.ctx.runMutation(this.component.lib.createSpan, {
+        traceId: this.traceId,
+        span: {
+          parentSpanId,
+          spanName,
+          source: "backend",
+          startTime: Date.now(),
+          status: "pending",
+        },
+      });
+    } catch (err) {
+      console.error("[Tracer] Failed to create child span:", err);
+      return await fn(this.createNoOpSpanAPI());
+    }
+
+    const spanAPI = this.createSpanAPI(childSpanId);
+    const startTime = Date.now();
+
+    try {
+      const result = await fn(spanAPI);
+      await this.ctx
+        .runMutation(this.component.lib.completeSpan, {
+          spanId: childSpanId,
+          endTime: Date.now(),
+          duration: Date.now() - startTime,
+          status: "success",
+        })
+        .catch((err) =>
+          console.error("[Tracer] Failed to complete span:", err),
+        );
+      return result;
+    } catch (error) {
+      await this.ctx
+        .runMutation(this.component.lib.completeSpan, {
+          spanId: childSpanId,
+          endTime: Date.now(),
+          duration: Date.now() - startTime,
+          status: "error",
+          error: error instanceof Error ? error.message : String(error),
+        })
+        .catch((err) =>
+          console.error("[Tracer] Failed to complete span with error:", err),
+        );
+
+      if (this.config.preserveErrors) {
+        this.preserve();
+      }
+      throw error;
+    }
   }
 
   private createNoOpSpanAPI(): SpanAPI {
@@ -214,7 +227,9 @@ export default class TracingAPI implements TraceAPI {
       warn: async () => {},
       error: async () => {},
       updateMetadata: async () => {},
-      withSpan: async () => undefined as any,
+      withSpan: async <T>(): Promise<T> => {
+        return undefined as any;
+      },
     };
   }
 }
