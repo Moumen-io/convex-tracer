@@ -96,7 +96,7 @@ const __traceContext = v.optional(
  *   name: "createPost",
  *   args: { title: v.string() },
  *   handler: async (ctx, args) => {
- *     ctx.tracer.info("Creating post");
+ *     await ctx.tracer.info("Creating post");
  *     return await ctx.db.insert("posts", args);
  *   },
  * });
@@ -303,12 +303,12 @@ export class Tracer<DataModel extends GenericDataModel> {
    *   name: "getUser",
    *   args: { userId: v.id("users") },
    *   onSuccess: async (ctx, args, result) => {
-   *     ctx.tracer.info("Succeeded user fetch", { userId: args.userId });
+   *     await ctx.tracer.info("Succeeded user fetch", { userId: args.userId });
    *   },
    *   handler: async (ctx, args) => {
-   *     ctx.tracer.info("fetching user", { title: args.userId });
+   *     await ctx.tracer.info("fetching user", { title: args.userId });
    *     const user = await ctx.db.get(args.userId);
-   *     ctx.tracer.info("user fetched", { userId: args.userId });
+   *     await ctx.tracer.info("user fetched", { userId: args.userId });
    *     return user;
    *   },
    * });
@@ -347,12 +347,12 @@ export class Tracer<DataModel extends GenericDataModel> {
    *   name: "getUser",
    *   args: { userId: v.id("users") },
    *   onSuccess: async (ctx, args, result) => {
-   *     ctx.tracer.info("Succeeded user fetch", { userId: args.userId });
+   *     await ctx.tracer.info("Succeeded user fetch", { userId: args.userId });
    *   },
    *   handler: async (ctx, args) => {
-   *     ctx.tracer.info("fetching user", { title: args.userId });
+   *     await ctx.tracer.info("fetching user", { title: args.userId });
    *     const user = await ctx.db.get(args.userId);
-   *     ctx.tracer.info("user fetched", { userId: args.userId });
+   *     await ctx.tracer.info("user fetched", { userId: args.userId });
    *     return user;
    *   },
    * });
@@ -456,19 +456,19 @@ export class Tracer<DataModel extends GenericDataModel> {
    *       .first();
    *
    *     if (existing) {
-   *       ctx.tracer.info("User already exists", { user: args.user });
+   *       await ctx.tracer.info("User already exists", { user: args.user });
    *       return existing._id;
    *     }
    *
-   *     ctx.tracer.info("Adding user", { ...args.user });
+   *     await ctx.tracer.info("Adding user", { ...args.user });
    *
    *     const userId = await ctx.db.insert("users", { ...args.user });
    *     ctx.tracer.info("User added", { userId });
    *
-   *     ctx.tracer.withSpan("syncUser", async (span) => {
-   *       span.info("Syncing user");
+   *     await ctx.tracer.withSpan("syncUser", async (span) => {
+   *       await span.info("Syncing user");
    *       // do something
-   *       span.info("User synced");
+   *       await span.info("User synced");
    *     });
    *
    *     return userId;

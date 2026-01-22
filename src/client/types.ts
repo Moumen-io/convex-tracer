@@ -1,13 +1,11 @@
 import type {
   FunctionReference,
   FunctionType,
-  FunctionVisibility,
   GenericActionCtx,
   GenericDatabaseReader,
   GenericDataModel,
   GenericMutationCtx,
   GenericQueryCtx,
-  RegisteredMutation,
   StorageReader,
 } from "convex/server";
 import type {
@@ -19,8 +17,6 @@ import type {
 import type { TraceAPI } from "./api/types";
 
 export type AnyFunctionReference = FunctionReference<any, any>;
-
-export type HasArgs<Args> = keyof Args extends never ? false : true;
 
 export type OptionalArgsObject<Args extends PropertyValidators> =
   keyof Args extends never ? {} : ObjectType<Args>;
@@ -138,7 +134,7 @@ export interface TracedFunctionOptions<
    * ```ts
    * onStart: async (ctx, args) => {
    *   // do something before the function starts
-   *   ctx.tracer.info("Starting Processing...");
+   *   await ctx.tracer.info("Starting Processing...");
    * }
    * ```
    */
@@ -154,7 +150,7 @@ export interface TracedFunctionOptions<
    * ```ts
    * onSuccess: async (ctx, args, result) => {
    *   // do something with the result
-   *   ctx.tracer.info("Successfully processed");
+   *   await ctx.tracer.info("Successfully processed");
    * }
    * ```
    */
@@ -174,7 +170,7 @@ export interface TracedFunctionOptions<
    * ```ts
    * onError: async (ctx, args, error) => {
    *   // do something to handle the error
-   *   ctx.tracer.error("Failed to process", { error: error.message });
+   *   await ctx.tracer.error("Failed to process", { error: error.message });
    * }
    * ```
    */
@@ -258,13 +254,3 @@ export type GenericFunctionContext<DataModel extends GenericDataModel> =
 export type TracedResult<Output> =
   | { success: true; data: Output; error: undefined }
   | { success: false; data: undefined; error: string };
-
-export type RegisteredTracedMutation<
-  Visibility extends FunctionVisibility,
-  Args extends PropertyValidators,
-  Output,
-> = RegisteredMutation<
-  Visibility,
-  ArgsWithTraceContext<Args>,
-  TracedResult<Output>
->;

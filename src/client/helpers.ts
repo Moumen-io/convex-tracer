@@ -152,10 +152,6 @@ export async function executeTracedHandler<
     isRoot,
   } = params;
 
-  console.log("at executeTracedHandler", Date.now());
-  const milliseconds = new Date().getTime();
-  console.log("milliseconds", milliseconds);
-
   const defaultConfig = (enhancedCtx as any).tracer
     .config as Required<TracerConfig>;
 
@@ -196,7 +192,6 @@ export async function executeTracedHandler<
     }
 
     const now = Date.now();
-    console.log("now", now);
 
     await ctx
       .runMutation(component.lib.completeSpan, {
