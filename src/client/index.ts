@@ -256,6 +256,7 @@ export class Tracer<DataModel extends GenericDataModel> {
       allArgs: any,
     ): Promise<TracedResult<Output>> => {
       const startTime = Date.now();
+
       const { existingContext, args } = extractTraceContext(allArgs);
 
       const { traceId, spanId, traceContext, isRoot } = await setupTraceContext(
