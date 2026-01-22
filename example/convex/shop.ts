@@ -15,7 +15,7 @@ import {
 export const getCustomers = tracedQuery({
   name: "getCustomers",
 
-  onSuccess: async (ctx, _, result) => {
+  onSuccess: async (ctx) => {
     await ctx.tracer.info("Succeeded fetching customers");
   },
   handler: async (ctx) => {
@@ -35,10 +35,10 @@ export const getCustomers = tracedQuery({
 // ============================================================================
 export const getProducts = tracedQuery({
   name: "getProducts",
-  onSuccess: async (ctx, args, result) => {
+  onSuccess: async (ctx) => {
     await ctx.tracer.info("Succeeded fetching products");
   },
-  handler: async (ctx, {}) => {
+  handler: async (ctx) => {
     await ctx.tracer.info("fetching products");
     const products = await ctx.db.query("products").collect();
 
@@ -570,74 +570,5 @@ export const createOrder = tracedMutation({
     return {
       status: "confirmed",
     };
-  },
-});
-
-export const nestedWithSpan = tracedMutation({
-  name: "nestedWithSpan",
-  sampleRate: 1,
-  handler: async (ctx, args) => {
-    await ctx.tracer.info("Starting nested trace");
-    await ctx.tracer.withSpan("nestedSpan", async (span) => {
-      console.log("in nested span");
-      console.log("span", span);
-      await span.info("Starting updated nested span", { foo: "bar" });
-      await span.warn("Warning in nested span");
-      await span.withSpan("nestedSpan2", async (span2) => {
-        await span2.info("Starting nested span2");
-        await span2.withSpan("nestedSpan3", async (span3) => {
-          await span3.info("Starting nested span3");
-          await span3.withSpan("nestedSpan4", async (span4) => {
-            await span4.info("Starting nested span4");
-            await span4.withSpan("nestedSpan5", async (span5) => {
-              await span5.info("Starting nested span5");
-              await span5.withSpan("nestedSpan6", async (span6) => {
-                await span6.info("Starting nested span6");
-                await span6.withSpan("nestedSpan7", async (span7) => {
-                  await span7.info("Starting nested span7");
-                  await span7.withSpan("nestedSpan8", async (span8) => {
-                    await span8.info("Starting nested span8");
-                    await span8.withSpan("nestedSpan9", async (span9) => {
-                      await span9.info("Starting nested span9");
-                      await span9.withSpan("nestedSpan10", async (span10) => {
-                        await span10.info("Starting nested span10");
-                        await span10.withSpan(
-                          "nestedSpan11",
-                          async (span11) => {
-                            await span11.info("Starting nested span11");
-                            await span11.withSpan(
-                              "nestedSpan12",
-                              async (span12) => {
-                                await span12.info("Starting nested span12");
-                                await span12.withSpan(
-                                  "nestedSpan13",
-                                  async (span13) => {
-                                    await span13.info("Starting nested span13");
-                                    await span13.withSpan(
-                                      "nestedSpan14",
-                                      async (span14) => {
-                                        await span14.info(
-                                          "Started nested span14",
-                                        );
-
-                                        console.log("end of spans");
-                                      },
-                                    );
-                                  },
-                                );
-                              },
-                            );
-                          },
-                        );
-                      });
-                    });
-                  });
-                });
-              });
-            });
-          });
-        });
-      });
-    });
   },
 });

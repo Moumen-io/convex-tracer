@@ -14,12 +14,13 @@ import type {
   PropertyValidators,
   Validator,
 } from "convex/values";
+import type { EmptyObject } from "../react/types";
 import type { TraceAPI } from "./tracer-api/types";
 
 export type AnyFunctionReference = FunctionReference<any, any>;
 
 export type OptionalArgsObject<Args extends PropertyValidators> =
-  keyof Args extends never ? {} : ObjectType<Args>;
+  keyof Args extends never ? EmptyObject : ObjectType<Args>;
 
 export type IfArgs<
   Args extends PropertyValidators,
@@ -70,7 +71,7 @@ export interface TracerConfig {
 export type LogArgs<Args extends PropertyValidators> = IfArgs<
   Args,
   boolean | Array<keyof ObjectType<Args>> | undefined,
-  {}
+  EmptyObject
 >;
 
 export interface TracedFunctionOptions<

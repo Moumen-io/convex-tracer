@@ -54,7 +54,7 @@ export default function TraceDemoView() {
     displayTraces.forEach((trace) => {
       if (!currentIds.has(trace._id)) {
         const index = displayTraces.findIndex((t) => t._id === trace._id);
-        // @ts-expect-error
+        // @ts-expect-error idk
         updated.splice(index, 0, { ...trace, flashColor: "red" as const });
       }
     });
@@ -69,6 +69,7 @@ export default function TraceDemoView() {
     prevIdsRef.current = currentIds;
 
     return () => clearTimeout(timeoutId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ts]);
 
   return (

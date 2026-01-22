@@ -15,6 +15,7 @@ export function SpanCard({ span, onClick }: SpanCardProps) {
     try {
       return JSON.stringify(JSON.parse(error), null, 2);
     } catch (e) {
+      console.warn("skipping error parsing", e);
       return error;
     }
   };

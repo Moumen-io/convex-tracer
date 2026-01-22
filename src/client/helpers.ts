@@ -227,7 +227,7 @@ export async function executeTracedHandler<
 
     if (preserveErrors) {
       const tracerAPI = new TracerAPI(ctx, component, traceId, spanId, config);
-      tracerAPI.preserve();
+      await tracerAPI.preserve();
     }
 
     await ctx

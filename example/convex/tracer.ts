@@ -10,8 +10,9 @@ export const {
   tracedAction,
   internalTracedQuery,
   internalTracedMutation,
+  internalTracedAction,
   tracer,
-} = new Tracer<DataModel>(components.tracer as any, {
+} = new Tracer<DataModel>(components.tracer, {
   retentionMinutes: 0.167,
 });
 

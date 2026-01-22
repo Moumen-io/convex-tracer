@@ -215,7 +215,7 @@ export default class TracingAPI implements TraceAPI {
         );
 
       if (this.config.preserveErrors) {
-        this.preserve();
+        await this.preserve();
       }
       throw error;
     }

@@ -7,7 +7,7 @@ export const seedDatabase = mutation({
     // Optional: Clear existing data
     if (reset) {
       console.log("Clearing existing data...");
-      
+
       const orders = await ctx.db.query("orders").collect();
       const payments = await ctx.db.query("payments").collect();
       const inventory = await ctx.db.query("inventory").collect();
@@ -15,58 +15,58 @@ export const seedDatabase = mutation({
       const customers = await ctx.db.query("customers").collect();
 
       await Promise.all([
-        ...payments.map(p => ctx.db.delete(p._id)),
-        ...orders.map(o => ctx.db.delete(o._id)),
-        ...inventory.map(i => ctx.db.delete(i._id)),
-        ...products.map(p => ctx.db.delete(p._id)),
-        ...customers.map(c => ctx.db.delete(c._id)),
+        ...payments.map((p) => ctx.db.delete(p._id)),
+        ...orders.map((o) => ctx.db.delete(o._id)),
+        ...inventory.map((i) => ctx.db.delete(i._id)),
+        ...products.map((p) => ctx.db.delete(p._id)),
+        ...customers.map((c) => ctx.db.delete(c._id)),
       ]);
-      
+
       console.log("Database cleared!");
     }
 
     // Seed Customers
     console.log("Seeding customers...");
     const customerData = [
-      { 
-        name: "Alice Johnson", 
-        email: "alice@example.com", 
-        creditLimit: 5000 
+      {
+        name: "Alice Johnson",
+        email: "alice@example.com",
+        creditLimit: 5000,
       },
-      { 
-        name: "Bob Smith", 
-        email: "bob@example.com", 
-        creditLimit: 2000 
+      {
+        name: "Bob Smith",
+        email: "bob@example.com",
+        creditLimit: 2000,
       },
-      { 
-        name: "Charlie Davis", 
-        email: "charlie@example.com", 
-        creditLimit: 10000 
+      {
+        name: "Charlie Davis",
+        email: "charlie@example.com",
+        creditLimit: 10000,
       },
-      { 
-        name: "Diana Prince", 
-        email: "diana@example.com", 
-        creditLimit: 1500 
+      {
+        name: "Diana Prince",
+        email: "diana@example.com",
+        creditLimit: 1500,
       },
-      { 
-        name: "Ethan Hunt", 
-        email: "ethan@example.com", 
-        creditLimit: 7500 
+      {
+        name: "Ethan Hunt",
+        email: "ethan@example.com",
+        creditLimit: 7500,
       },
-      { 
-        name: "Fiona Green", 
-        email: "fiona@example.com", 
-        creditLimit: 3000 
+      {
+        name: "Fiona Green",
+        email: "fiona@example.com",
+        creditLimit: 3000,
       },
     ];
 
     const customers = await Promise.all(
-      customerData.map(customer =>
+      customerData.map((customer) =>
         ctx.db.insert("customers", {
           ...customer,
           createdAt: Date.now() - Math.random() * 90 * 24 * 60 * 60 * 1000, // Random date within last 90 days
-        })
-      )
+        }),
+      ),
     );
 
     console.log(`✓ Created ${customers.length} customers`);
@@ -76,7 +76,8 @@ export const seedDatabase = mutation({
     const productData = [
       {
         name: "Wireless Bluetooth Headphones",
-        description: "Premium noise-cancelling headphones with 30-hour battery life",
+        description:
+          "Premium noise-cancelling headphones with 30-hour battery life",
         price: 149.99,
         category: "Electronics",
         sku: "ELEC-HP-001",
@@ -182,12 +183,12 @@ export const seedDatabase = mutation({
     ];
 
     const products = await Promise.all(
-      productData.map(product =>
+      productData.map((product) =>
         ctx.db.insert("products", {
           ...product,
           createdAt: Date.now() - Math.random() * 120 * 24 * 60 * 60 * 1000, // Random date within last 120 days
-        })
-      )
+        }),
+      ),
     );
 
     console.log(`✓ Created ${products.length} products`);
@@ -197,15 +198,15 @@ export const seedDatabase = mutation({
     const inventoryData = products.map((productId, index) => {
       // Create different inventory levels to test various scenarios
       const scenarios = [
-        { quantity: 150, reserved: 10 },  // High stock
-        { quantity: 45, reserved: 5 },    // Medium stock
-        { quantity: 8, reserved: 2 },     // Low stock (triggers warnings)
-        { quantity: 200, reserved: 20 },  // Very high stock
-        { quantity: 15, reserved: 3 },    // Medium-low stock
+        { quantity: 150, reserved: 10 }, // High stock
+        { quantity: 45, reserved: 5 }, // Medium stock
+        { quantity: 8, reserved: 2 }, // Low stock (triggers warnings)
+        { quantity: 200, reserved: 20 }, // Very high stock
+        { quantity: 15, reserved: 3 }, // Medium-low stock
       ];
-      
+
       const scenario = scenarios[index % scenarios.length];
-      
+
       return {
         productId,
         quantity: scenario.quantity,
@@ -216,7 +217,7 @@ export const seedDatabase = mutation({
     });
 
     const inventory = await Promise.all(
-      inventoryData.map(inv => ctx.db.insert("inventory", inv))
+      inventoryData.map((inv) => ctx.db.insert("inventory", inv)),
     );
 
     console.log(`✓ Created ${inventory.length} inventory records`);
@@ -303,18 +304,18 @@ export const seedDatabase = mutation({
     ];
 
     const orders = await Promise.all(
-      historicalOrders.map(order => ctx.db.insert("orders", order))
+      historicalOrders.map((order) => ctx.db.insert("orders", order)),
     );
 
     console.log(`✓ Created ${orders.length} historical orders`);
 
     // Create payment records for successful orders
     const successfulOrders = historicalOrders.filter(
-      order => order.status !== "payment_failed" && order.transactionId
+      (order) => order.status !== "payment_failed" && order.transactionId,
     );
 
     const payments = await Promise.all(
-      successfulOrders.map((order, index) =>
+      successfulOrders.map((order) =>
         ctx.db.insert("payments", {
           orderId: orders[historicalOrders.indexOf(order)],
           amount: order.total,
@@ -322,27 +323,35 @@ export const seedDatabase = mutation({
           transactionId: order.transactionId!,
           status: "completed",
           processedAt: order.confirmedAt!,
-        })
-      )
+        }),
+      ),
     );
 
     console.log(`✓ Created ${payments.length} payment records`);
 
     // Summary
     console.log("\n🎉 Database seeded successfully!");
-    console.log("=" .repeat(50));
+    console.log("=".repeat(50));
     console.log(`📊 Summary:`);
     console.log(`   • ${customers.length} customers`);
     console.log(`   • ${products.length} products`);
     console.log(`   • ${inventory.length} inventory records`);
     console.log(`   • ${orders.length} historical orders`);
     console.log(`   • ${payments.length} payment records`);
-    console.log("=" .repeat(50));
+    console.log("=".repeat(50));
     console.log("\n💡 Test Scenarios:");
-    console.log(`   • Alice (${customerData[0].email}): Good customer, $5000 credit`);
-    console.log(`   • Bob (${customerData[1].email}): 2 failed payments, $2000 credit`);
-    console.log(`   • Charlie (${customerData[2].email}): High credit limit, active buyer`);
-    console.log(`   • Products with low inventory: Check inventory table for quantity < 10`);
+    console.log(
+      `   • Alice (${customerData[0].email}): Good customer, $5000 credit`,
+    );
+    console.log(
+      `   • Bob (${customerData[1].email}): 2 failed payments, $2000 credit`,
+    );
+    console.log(
+      `   • Charlie (${customerData[2].email}): High credit limit, active buyer`,
+    );
+    console.log(
+      `   • Products with low inventory: Check inventory table for quantity < 10`,
+    );
     console.log("\n🚀 Ready to test createOrder!");
 
     return {

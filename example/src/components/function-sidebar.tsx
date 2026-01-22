@@ -15,7 +15,7 @@ import {
 import { Separator } from "./ui/separator";
 
 import { useTracedMutation } from "convex-tracer/react";
-import { useMutation } from "convex/react";
+import { cn } from "../lib/utils";
 
 type FunctionDef = {
   name: string;
@@ -82,27 +82,28 @@ export function FunctionSidebar() {
 
   const executeMutation = useTracedMutation(selectedFunction.funcRef);
 
-  const tracedMutation = useTracedMutation(api.shop.getCustomers);
-  const regularMutation = useMutation(api.shop.getCustomers);
+  const tracedMutation = useTracedMutation(api.shop.getProductWithInventory);
 
   const executeFunction = async () => {
     setIsLoading(true);
-    switch (selectedFunction.type) {
-      case "query":
-      case "mutation":
-        let result;
+    if (
+      selectedFunction.type === "query" ||
+      selectedFunction.type === "mutation"
+    ) {
+      let result;
 
-        if (!functionArgs) {
-          result = await executeMutation();
-        } else {
-          // @ts-expect-error
-          result = await executeMutation({ ...functionArgs });
-        }
+      const a = await tracedMutation();
+      console.log(a);
 
-        setFnReturn(result);
+      if (!functionArgs) {
+        result = await executeMutation({});
+      } else {
+        result = await executeMutation({ ...functionArgs });
+      }
 
-      case "action":
-        console.log("action");
+      setFnReturn(result);
+    } else {
+      console.log("action");
     }
     setIsLoading(false);
   };
@@ -160,17 +161,22 @@ export function FunctionSidebar() {
 
   const getResponse = () => {
     const val = fnReturn;
-    if (typeof fnReturn !== "object") return;
+    if (typeof fnReturn !== "object") return val;
 
     try {
+      const newVal = { ...val };
+
       if (val.error) {
         try {
           const e = JSON.parse(val.error);
-          val.error = e;
-        } catch (e) {}
+          newVal.error = e;
+        } catch (e) {
+          console.warn("skipping error parsing", e);
+        }
       }
       return JSON.stringify(val, null, 2);
     } catch (e) {
+      console.info("skipping error parsing", e);
       return val;
     }
   };
@@ -292,7 +298,8 @@ export function FunctionSidebar() {
               ))}
               <Button
                 onClick={executeFunction}
-                className="w-full mt-4 hover:cursor-pointer"
+                disabled={isLoading}
+                className={cn("w-full mt-4 hover:cursor-pointer")}
               >
                 Execute Function
               </Button>

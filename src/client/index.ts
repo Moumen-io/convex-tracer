@@ -1,4 +1,4 @@
-import type { FunctionType } from "convex/server";
+import type { FunctionType, GenericQueryCtx } from "convex/server";
 import {
   actionGeneric,
   type GenericActionCtx,
@@ -15,6 +15,7 @@ import { v } from "convex/values";
 import type { ComponentApi } from "../component/_generated/component";
 import { statusValidator } from "../component/schema";
 import type { CompleteTrace, Trace } from "../component/types";
+import type { EmptyObject } from "../react/types";
 import {
   executeTracedHandler,
   extractTraceContext,
@@ -131,7 +132,7 @@ export class Tracer<DataModel extends GenericDataModel> {
       retentionMinutes: this.retentionMinutes,
     };
 
-    const { runMutation, scheduler, db, storage, ...restOfCtx } = ctx;
+    const { db, storage, ...restOfCtx } = ctx;
 
     const { get, query, normalizeId, system } = db;
     const { getUrl, getMetadata } = storage;
@@ -140,7 +141,7 @@ export class Tracer<DataModel extends GenericDataModel> {
       ...restOfCtx,
       db: { get, query, normalizeId, system },
       storage: { getUrl, getMetadata },
-    };
+    } satisfies GenericQueryCtx<DataModel>;
 
     return {
       ...queryCtx,
@@ -293,7 +294,7 @@ export class Tracer<DataModel extends GenericDataModel> {
    */
   tracedQuery = <
     Ctx extends QueryCtxWithTracer<DataModel>,
-    Args extends PropertyValidators | {},
+    Args extends PropertyValidators | EmptyObject,
     Handler extends TracerHandler<Ctx, Args>,
     Output extends ExtractOutput<Handler>,
   >(
@@ -337,7 +338,7 @@ export class Tracer<DataModel extends GenericDataModel> {
    */
   internalTracedQuery = <
     Ctx extends QueryCtxWithTracer<DataModel>,
-    Args extends PropertyValidators | {},
+    Args extends PropertyValidators | EmptyObject,
     Handler extends TracerHandler<Ctx, Args>,
     Output extends ExtractOutput<Handler>,
   >(
@@ -396,7 +397,7 @@ export class Tracer<DataModel extends GenericDataModel> {
    */
   tracedMutation = <
     Ctx extends MutationCtxWithTracer<DataModel>,
-    Args extends PropertyValidators | {},
+    Args extends PropertyValidators | EmptyObject,
     Handler extends TracerHandler<Ctx, Args>,
     Output extends ExtractOutput<Handler>,
   >(
@@ -455,7 +456,7 @@ export class Tracer<DataModel extends GenericDataModel> {
    */
   internalTracedMutation = <
     Ctx extends MutationCtxWithTracer<DataModel>,
-    Args extends PropertyValidators | {},
+    Args extends PropertyValidators | EmptyObject,
     Handler extends TracerHandler<Ctx, Args>,
     Output extends ExtractOutput<Handler>,
   >(
@@ -493,7 +494,7 @@ export class Tracer<DataModel extends GenericDataModel> {
    */
   tracedAction = <
     Ctx extends ActionCtxWithTracer<DataModel>,
-    Args extends PropertyValidators | {},
+    Args extends PropertyValidators | EmptyObject,
     Handler extends TracerHandler<Ctx, Args>,
     Output extends ExtractOutput<Handler>,
   >(
@@ -527,7 +528,7 @@ export class Tracer<DataModel extends GenericDataModel> {
    */
   internalTracedAction = <
     Ctx extends ActionCtxWithTracer<DataModel>,
-    Args extends PropertyValidators | {},
+    Args extends PropertyValidators | EmptyObject,
     Handler extends TracerHandler<Ctx, Args>,
     Output extends ExtractOutput<Handler>,
   >(
