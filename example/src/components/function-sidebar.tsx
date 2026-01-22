@@ -82,8 +82,6 @@ export function FunctionSidebar() {
 
   const executeMutation = useTracedMutation(selectedFunction.funcRef);
 
-  const tracedMutation = useTracedMutation(api.shop.getProductWithInventory);
-
   const executeFunction = async () => {
     setIsLoading(true);
     if (
@@ -92,12 +90,10 @@ export function FunctionSidebar() {
     ) {
       let result;
 
-      const a = await tracedMutation();
-      console.log(a);
-
       if (!functionArgs) {
         result = await executeMutation({});
       } else {
+        // @ts-expect-error failed type inference on dynamic FuncRef
         result = await executeMutation({ ...functionArgs });
       }
 
