@@ -2,6 +2,10 @@
  * Internal mutations for managing traces, spans, and logs.
  * These are called automatically by the tracing system to persist data immediately.
  */
+import {
+  paginationOptsValidator,
+  paginationResultValidator,
+} from "convex/server";
 import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel.js";
 import { mutation, query, type MutationCtx } from "./_generated/server.js";
@@ -26,6 +30,7 @@ export const createTrace = mutation({
     sampleRate: v.number(),
     metadata: v.optional(v.record(v.string(), v.any())),
     source: sourceValidator,
+    userId: v.union(v.literal("anonymous"), v.string()),
   },
   returns: v.id("traces"),
   handler: async (ctx, args): Promise<Id<"traces">> => {
@@ -34,6 +39,7 @@ export const createTrace = mutation({
       sampleRate: args.sampleRate,
       updatedAt: Date.now(),
       metadata: args.metadata,
+      userId: args.userId,
     });
   },
 });
@@ -305,34 +311,38 @@ export const getTrace = query({
 export const listTraces = query({
   args: {
     status: v.optional(statusValidator),
-    limit: v.optional(v.number()),
     userId: v.optional(v.string()),
+    paginationOpts: paginationOptsValidator,
   },
-  returns: v.array(
+  returns: paginationResultValidator(
     schema.tables.traces.validator.extend({
       _id: v.id("traces"),
       _creationTime: v.number(),
     }),
   ),
-  handler: async (ctx, { status, limit, userId }) => {
-    const query =
-      status && !userId
-        ? ctx.db
-            .query("traces")
-            .withIndex("by_status", (q) => q.eq("status", status))
-        : !status && userId
-          ? ctx.db
-              .query("traces")
-              .withIndex("by_userId", (q) => q.eq("userId", userId))
-          : status && userId
-            ? ctx.db
-                .query("traces")
-                .withIndex("by_status_and_userId", (q) =>
-                  q.eq("status", status).eq("userId", userId),
-                )
-            : ctx.db.query("traces");
+  handler: async (ctx, { status, userId, paginationOpts }) => {
+    const query = ctx.db.query("traces");
 
-    return await query.order("desc").take(limit ?? 100);
+    if (status && !userId) {
+      return await query
+        .withIndex("by_status", (q) => q.eq("status", status))
+        .order("desc")
+        .paginate(paginationOpts);
+    } else if (!status && userId) {
+      return await query
+        .withIndex("by_userId", (q) => q.eq("userId", userId))
+        .order("desc")
+        .paginate(paginationOpts);
+    } else if (status && userId) {
+      return await query
+        .withIndex("by_status_and_userId", (q) =>
+          q.eq("status", status).eq("userId", userId),
+        )
+        .order("desc")
+        .paginate(paginationOpts);
+    }
+
+    return await query.order("desc").paginate(paginationOpts);
   },
 });
 
