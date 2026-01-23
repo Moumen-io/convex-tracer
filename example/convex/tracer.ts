@@ -1,4 +1,5 @@
-import { Tracer } from "convex-tracer";
+import { Tracer, statusValidator } from "convex-tracer";
+import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
 import { components } from "./_generated/api";
 import { DataModel } from "./_generated/dataModel";
@@ -18,9 +19,21 @@ export const {
 
 export const listTraces = query({
   args: {
-    limit: v.optional(v.number()),
+    status: v.optional(statusValidator),
+    userId: v.optional(v.string()),
+    paginationOpts: paginationOptsValidator,
   },
   handler: async (ctx, args) => await tracer.listTraces(ctx, args),
+});
+
+export const searchTraces = query({
+  args: {
+    functionName: v.string(),
+    userId: v.optional(v.string()),
+    status: v.optional(statusValidator),
+    paginationOpts: paginationOptsValidator,
+  },
+  handler: async (ctx, args) => await tracer.searchTraces(ctx, args),
 });
 
 export const getTrace = query({

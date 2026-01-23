@@ -1,12 +1,16 @@
-import type { FunctionType, GenericQueryCtx } from "convex/server";
+import type {
+  FunctionType,
+  GenericQueryCtx,
+  paginationOptsValidator,
+} from "convex/server";
 import {
   actionGeneric,
-  type GenericActionCtx,
-  type GenericDataModel,
-  type GenericMutationCtx,
   internalActionGeneric,
   internalMutationGeneric,
   mutationGeneric,
+  type GenericActionCtx,
+  type GenericDataModel,
+  type GenericMutationCtx,
   type RegisteredAction,
   type RegisteredMutation,
 } from "convex/server";
@@ -14,7 +18,7 @@ import type { Infer, PropertyValidators } from "convex/values";
 import { v } from "convex/values";
 import type { ComponentApi } from "../component/_generated/component";
 import { statusValidator } from "../component/schema";
-import type { CompleteTrace, Trace } from "../component/types";
+import { type CompleteTrace, type paginatedTraces } from "../component/types";
 import type { EmptyObject } from "../react/types";
 import {
   executeTracedHandler,
@@ -40,6 +44,11 @@ import type {
   TracerHandler,
 } from "./types";
 
+export {
+  severityValidator,
+  sourceValidator,
+  statusValidator,
+} from "../component/schema";
 export * from "../component/types";
 
 const DEFAULT_CONFIG: Required<TracerConfig> = {
@@ -571,6 +580,9 @@ export class Tracer<DataModel extends GenericDataModel> {
        * @param status - The status of the traces to retrieve.
        * @param limit - The maximum number of traces to retrieve.
        * @param userId - The ID of the user to retrieve traces for.
+       * @param paginationOpts - Convex pagination options.
+       * @returns A pagination result containing the page of results and a
+       * cursor to continue paginating.
        * @example
        * ```ts
        * // In a convex function (query, mutation, or action)
@@ -580,13 +592,34 @@ export class Tracer<DataModel extends GenericDataModel> {
        */
       listTraces: async (
         ctx: GenericFunctionContext<DataModel>,
-        args?: {
+        args: {
           status?: Infer<typeof statusValidator>;
-          limit?: number;
           userId?: string;
+          paginationOpts: Infer<typeof paginationOptsValidator>;
         },
-      ): Promise<Trace[]> => {
-        return await ctx.runQuery(this.component.lib.listTraces, { ...args });
+      ): Promise<paginatedTraces> => {
+        return await ctx.runQuery(this.component.lib.listTraces, args);
+      },
+
+      /**
+       * Searches for traces by function name.
+       * @param functionName - The name of the function to search for.
+       * @param userId - The ID of the user to search for.
+       * @param status - The status of the traces to search for.
+       * @param paginationOpts - Convex pagination options.
+       * @returns A pagination result containing the page of results and a
+       * cursor to continue paginating.
+       */
+      searchTraces: async (
+        ctx: GenericFunctionContext<DataModel>,
+        args: {
+          functionName: string;
+          userId?: string;
+          status?: Infer<typeof statusValidator>;
+          paginationOpts: Infer<typeof paginationOptsValidator>;
+        },
+      ): Promise<paginatedTraces> => {
+        return await ctx.runQuery(this.component.lib.searchTraces, args);
       },
     };
   }

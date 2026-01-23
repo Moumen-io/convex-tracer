@@ -25,11 +25,16 @@ export default defineSchema({
     preserve: v.optional(v.boolean()),
     updatedAt: v.number(),
     metadata: v.optional(v.record(v.string(), v.any())),
+    functionName: v.optional(v.string()),
     userId: v.optional(v.string()),
   })
     .index("by_status", ["status"])
     .index("by_userId", ["userId"])
-    .index("by_status_and_userId", ["status", "userId"]),
+    .index("by_status_and_userId", ["status", "userId"])
+    .searchIndex("by_function_name", {
+      searchField: "functionName",
+      filterFields: ["status", "userId"],
+    }),
 
   spans: defineTable({
     traceId: v.id("traces"),

@@ -2,19 +2,16 @@
  * Internal mutations for managing traces, spans, and logs.
  * These are called automatically by the tracing system to persist data immediately.
  */
-import {
-  paginationOptsValidator,
-  paginationResultValidator,
-} from "convex/server";
+import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel.js";
 import { mutation, query, type MutationCtx } from "./_generated/server.js";
-import schema, {
+import {
   severityValidator,
   sourceValidator,
   statusValidator,
 } from "./schema.js";
-import { vCompleteTrace } from "./types.js";
+import { vCompleteTrace, vPaginatedTraces } from "./types.js";
 
 // ============================================================================
 // Trace Operations
@@ -314,12 +311,7 @@ export const listTraces = query({
     userId: v.optional(v.string()),
     paginationOpts: paginationOptsValidator,
   },
-  returns: paginationResultValidator(
-    schema.tables.traces.validator.extend({
-      _id: v.id("traces"),
-      _creationTime: v.number(),
-    }),
-  ),
+  returns: vPaginatedTraces,
   handler: async (ctx, { status, userId, paginationOpts }) => {
     const query = ctx.db.query("traces");
 
@@ -343,6 +335,48 @@ export const listTraces = query({
     }
 
     return await query.order("desc").paginate(paginationOpts);
+  },
+});
+
+export const searchTraces = query({
+  args: {
+    functionName: v.string(),
+    userId: v.optional(v.string()),
+    status: v.optional(statusValidator),
+    paginationOpts: paginationOptsValidator,
+  },
+  returns: vPaginatedTraces,
+  handler: async (ctx, { functionName, paginationOpts, userId, status }) => {
+    const query = ctx.db.query("traces");
+
+    if (userId) {
+      return await query
+        .withSearchIndex("by_function_name", (q) =>
+          q.search("functionName", functionName).eq("userId", userId),
+        )
+        .paginate(paginationOpts);
+    } else if (status) {
+      return await query
+        .withSearchIndex("by_function_name", (q) =>
+          q.search("functionName", functionName).eq("status", status),
+        )
+        .paginate(paginationOpts);
+    } else if (userId && status) {
+      return await query
+        .withSearchIndex("by_function_name", (q) =>
+          q
+            .search("functionName", functionName)
+            .eq("userId", userId)
+            .eq("status", status),
+        )
+        .paginate(paginationOpts);
+    }
+
+    return await query
+      .withSearchIndex("by_function_name", (q) =>
+        q.search("functionName", functionName),
+      )
+      .paginate(paginationOpts);
   },
 });
 

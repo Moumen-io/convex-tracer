@@ -98,6 +98,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         null | {
           _creationTime: number;
           _id: string;
+          functionName?: string;
           metadata?: Record<string, any>;
           preserve?: boolean;
           sampleRate: number;
@@ -155,6 +156,42 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
           page: Array<{
             _creationTime: number;
             _id: string;
+            functionName?: string;
+            metadata?: Record<string, any>;
+            preserve?: boolean;
+            sampleRate: number;
+            status: "pending" | "success" | "error";
+            updatedAt: number;
+            userId?: string;
+          }>;
+          pageStatus?: "SplitRecommended" | "SplitRequired" | null;
+          splitCursor?: string | null;
+        },
+        Name
+      >;
+      searchTraces: FunctionReference<
+        "query",
+        "internal",
+        {
+          functionName: string;
+          paginationOpts: {
+            cursor: string | null;
+            endCursor?: string | null;
+            id?: number;
+            maximumBytesRead?: number;
+            maximumRowsRead?: number;
+            numItems: number;
+          };
+          status?: "pending" | "success" | "error";
+          userId?: string;
+        },
+        {
+          continueCursor: string;
+          isDone: boolean;
+          page: Array<{
+            _creationTime: number;
+            _id: string;
+            functionName?: string;
             metadata?: Record<string, any>;
             preserve?: boolean;
             sampleRate: number;
