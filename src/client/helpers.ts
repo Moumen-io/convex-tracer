@@ -1,4 +1,4 @@
-import type { GenericDataModel } from "convex/server";
+import type { Auth, GenericDataModel } from "convex/server";
 import type { ObjectType, PropertyValidators } from "convex/values";
 import type { ComponentApi } from "../component/_generated/component";
 import TracerAPI from "./tracer-api/index";
@@ -23,6 +23,14 @@ function pick<T extends Record<string, any>, Keys extends (keyof T)[]>(
   ) as {
     [K in Keys[number]]: T[K];
   };
+}
+
+async function getAuthUserId(ctx: { auth: Auth }) {
+  const identity = await ctx.auth.getUserIdentity();
+  if (identity === null) return "anonymous";
+
+  const [userId] = identity.subject.split("|");
+  return userId;
 }
 
 export function extractTraceContext<Args extends Record<string, unknown>>(
@@ -90,11 +98,13 @@ export async function setupTraceContext(
     };
   }
 
+  const userId = await getAuthUserId(ctx);
   const traceId = await ctx.runMutation(component.lib.createTrace, {
     status: "pending",
     sampleRate,
     metadata: {},
     source: "backend",
+    userId,
   });
 
   const spanId = await ctx.runMutation(component.lib.createSpan, {
