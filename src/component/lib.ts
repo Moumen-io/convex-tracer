@@ -349,13 +349,13 @@ export const searchTraces = query({
   handler: async (ctx, { functionName, paginationOpts, userId, status }) => {
     const query = ctx.db.query("traces");
 
-    if (userId) {
+    if (userId && !status) {
       return await query
         .withSearchIndex("by_function_name", (q) =>
           q.search("functionName", functionName).eq("userId", userId),
         )
         .paginate(paginationOpts);
-    } else if (status) {
+    } else if (status && !userId) {
       return await query
         .withSearchIndex("by_function_name", (q) =>
           q.search("functionName", functionName).eq("status", status),
