@@ -2,7 +2,6 @@
  * Internal mutations for managing traces, spans, and logs.
  * These are called automatically by the tracing system to persist data immediately.
  */
-import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
 import type { Id } from "./_generated/dataModel.js";
 import { mutation, query, type MutationCtx } from "./_generated/server.js";
@@ -11,7 +10,7 @@ import {
   sourceValidator,
   statusValidator,
 } from "./schema.js";
-import { vCompleteTrace, vPaginatedTraces } from "./types.js";
+import { vCompleteTrace, vTrace } from "./types.js";
 
 // ============================================================================
 // Trace Operations
@@ -309,32 +308,40 @@ export const listTraces = query({
   args: {
     status: v.optional(statusValidator),
     userId: v.optional(v.string()),
-    paginationOpts: paginationOptsValidator,
+    limit: v.optional(v.number()),
   },
-  returns: vPaginatedTraces,
-  handler: async (ctx, { status, userId, paginationOpts }) => {
+  returns: v.array(vTrace),
+  handler: async (ctx, { status, userId, limit }) => {
     const query = ctx.db.query("traces");
 
     if (status && !userId) {
-      return await query
+      const q = query
         .withIndex("by_status", (q) => q.eq("status", status))
-        .order("desc")
-        .paginate(paginationOpts);
+        .order("desc");
+
+      if (limit) return await q.take(limit);
+      else return await q.collect();
     } else if (!status && userId) {
-      return await query
+      const q = query
         .withIndex("by_userId", (q) => q.eq("userId", userId))
-        .order("desc")
-        .paginate(paginationOpts);
+        .order("desc");
+
+      if (limit) return await q.take(limit);
+      else return await q.collect();
     } else if (status && userId) {
-      return await query
+      const q = query
         .withIndex("by_status_and_userId", (q) =>
           q.eq("status", status).eq("userId", userId),
         )
-        .order("desc")
-        .paginate(paginationOpts);
+        .order("desc");
+
+      if (limit) return await q.take(limit);
+      else return await q.collect();
     }
 
-    return await query.order("desc").paginate(paginationOpts);
+    const q = query.order("desc");
+    if (limit) return await q.take(limit);
+    else return await q.collect();
   },
 });
 
@@ -343,40 +350,44 @@ export const searchTraces = query({
     functionName: v.string(),
     userId: v.optional(v.string()),
     status: v.optional(statusValidator),
-    paginationOpts: paginationOptsValidator,
+    limit: v.optional(v.number()),
   },
-  returns: vPaginatedTraces,
-  handler: async (ctx, { functionName, paginationOpts, userId, status }) => {
+  returns: v.array(vTrace),
+  handler: async (ctx, { functionName, limit, userId, status }) => {
     const query = ctx.db.query("traces");
 
     if (userId && !status) {
-      return await query
-        .withSearchIndex("by_function_name", (q) =>
-          q.search("functionName", functionName).eq("userId", userId),
-        )
-        .paginate(paginationOpts);
+      const q = query.withSearchIndex("by_function_name", (q) =>
+        q.search("functionName", functionName).eq("userId", userId),
+      );
+
+      if (limit) return await q.take(limit);
+      else return await q.collect();
     } else if (status && !userId) {
-      return await query
-        .withSearchIndex("by_function_name", (q) =>
-          q.search("functionName", functionName).eq("status", status),
-        )
-        .paginate(paginationOpts);
+      const q = query.withSearchIndex("by_function_name", (q) =>
+        q.search("functionName", functionName).eq("status", status),
+      );
+
+      if (limit) return await q.take(limit);
+      else return await q.collect();
     } else if (userId && status) {
-      return await query
-        .withSearchIndex("by_function_name", (q) =>
-          q
-            .search("functionName", functionName)
-            .eq("userId", userId)
-            .eq("status", status),
-        )
-        .paginate(paginationOpts);
+      const q = query.withSearchIndex("by_function_name", (q) =>
+        q
+          .search("functionName", functionName)
+          .eq("userId", userId)
+          .eq("status", status),
+      );
+
+      if (limit) return await q.take(limit);
+      else return await q.collect();
     }
 
-    return await query
-      .withSearchIndex("by_function_name", (q) =>
-        q.search("functionName", functionName),
-      )
-      .paginate(paginationOpts);
+    const q = query.withSearchIndex("by_function_name", (q) =>
+      q.search("functionName", functionName),
+    );
+
+    if (limit) return await q.take(limit);
+    else return await q.collect();
   },
 });
 

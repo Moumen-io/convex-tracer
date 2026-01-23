@@ -1,8 +1,4 @@
-import type {
-  FunctionType,
-  GenericQueryCtx,
-  paginationOptsValidator,
-} from "convex/server";
+import type { FunctionType, GenericQueryCtx } from "convex/server";
 import {
   actionGeneric,
   internalActionGeneric,
@@ -18,7 +14,7 @@ import type { Infer, PropertyValidators } from "convex/values";
 import { v } from "convex/values";
 import type { ComponentApi } from "../component/_generated/component";
 import { statusValidator } from "../component/schema";
-import { type CompleteTrace, type paginatedTraces } from "../component/types";
+import { type CompleteTrace, type Trace } from "../component/types";
 import type { EmptyObject } from "../react/types";
 import {
   executeTracedHandler,
@@ -595,9 +591,9 @@ export class Tracer<DataModel extends GenericDataModel> {
         args: {
           status?: Infer<typeof statusValidator>;
           userId?: string;
-          paginationOpts: Infer<typeof paginationOptsValidator>;
+          limit?: number;
         },
-      ): Promise<paginatedTraces> => {
+      ): Promise<Trace[]> => {
         return await ctx.runQuery(this.component.lib.listTraces, args);
       },
 
@@ -616,9 +612,9 @@ export class Tracer<DataModel extends GenericDataModel> {
           functionName: string;
           userId?: string;
           status?: Infer<typeof statusValidator>;
-          paginationOpts: Infer<typeof paginationOptsValidator>;
+          limit?: number;
         },
-      ): Promise<paginatedTraces> => {
+      ): Promise<Trace[]> => {
         return await ctx.runQuery(this.component.lib.searchTraces, args);
       },
     };

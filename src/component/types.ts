@@ -1,4 +1,3 @@
-import { paginationResultValidator } from "convex/server";
 import { v, type Infer } from "convex/values";
 import schema from "./schema";
 
@@ -6,8 +5,6 @@ export const vTrace = schema.tables.traces.validator.extend({
   _id: v.string(),
   _creationTime: v.number(),
 });
-
-export const vPaginatedTraces = paginationResultValidator(vTrace);
 
 export const vSpan = schema.tables.spans.validator
   .omit("parentSpanId")
@@ -39,4 +36,3 @@ export type Span = Infer<typeof vSpan>;
 export type Log = Infer<typeof vLog>;
 export type SpanWithLogs = Infer<typeof vSpanWithLogs>;
 export type CompleteTrace = Infer<typeof vCompleteTrace>;
-export type paginatedTraces = Infer<typeof vPaginatedTraces>;
