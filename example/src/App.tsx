@@ -1,4 +1,4 @@
-import { useQuery } from "convex/react";
+import { usePaginatedQuery } from "convex/react";
 import { useEffect, useRef, useState } from "react";
 import { api } from "../convex/_generated/api";
 import { StatusBadge } from "./components/badges";
@@ -31,7 +31,11 @@ export default function TraceDemoView() {
   // There is probably a better way
   // I just wanted a visual effect to demonstrate sampling
 
-  const ts = useQuery(api.tracer.listTraces, { limit: 100 });
+  const { results: ts } = usePaginatedQuery(
+    api.tracer.listTraces,
+    {},
+    { initialNumItems: 100 },
+  );
 
   const [displayTraces, setDisplayTraces] = useState<
     (Trace & { flashColor?: "green" | "red" })[]
