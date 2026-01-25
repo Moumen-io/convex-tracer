@@ -9,6 +9,11 @@ import {
   tracedQuery,
 } from "./tracer";
 
+// This is just an example of how to use the tracer
+// It does not strictly follow Convex's best practices
+// and is not meant to be used in production!
+// Uses strings instead of ids to simulate failure on query and not at validator
+
 // ============================================================================
 // QUERY: Get Customers
 // ============================================================================
@@ -54,7 +59,7 @@ export const getProducts = tracedQuery({
 // ============================================================================
 export const getProductWithInventory = tracedQuery({
   name: "getProductWithInventory",
-  // using string to simulate failure on query and not at validator
+
   args: { productId: v.string() },
   logArgs: ["productId"],
   logReturn: true,
@@ -114,7 +119,7 @@ export const getProductWithInventory = tracedQuery({
 // ============================================================================
 export const validateCustomer = internalTracedQuery({
   name: "validateCustomer",
-  args: { customerId: v.id("customers"), orderTotal: v.number() },
+  args: { customerId: v.string(), orderTotal: v.number() },
   logArgs: ["customerId", "orderTotal"],
   logReturn: true,
   onSuccess: async (ctx, args, result) => {
@@ -129,7 +134,7 @@ export const validateCustomer = internalTracedQuery({
   handler: async (ctx, { customerId, orderTotal }) => {
     await ctx.tracer.info("Validating customer eligibility");
 
-    const customer = await ctx.db.get(customerId);
+    const customer = await ctx.db.get(customerId as Id<"customers">);
     if (!customer) {
       throw new ConvexError({ code: "CUSTOMER_NOT_FOUND", customerId });
     }
@@ -157,7 +162,9 @@ export const validateCustomer = internalTracedQuery({
       async (span) => {
         const recentOrders = await ctx.db
           .query("orders")
-          .withIndex("by_customer", (q) => q.eq("customerId", customerId))
+          .withIndex("by_customer", (q) =>
+            q.eq("customerId", customerId as Id<"customers">),
+          )
           .order("desc")
           .take(5);
 
@@ -274,7 +281,7 @@ export const reserveInventory = internalTracedMutation({
   args: {
     items: v.array(
       v.object({
-        productId: v.id("products"),
+        productId: v.string(),
         quantity: v.number(),
       }),
     ),
@@ -303,7 +310,9 @@ export const reserveInventory = internalTracedMutation({
 
           const inventory = await ctx.db
             .query("inventory")
-            .withIndex("by_product", (q) => q.eq("productId", item.productId))
+            .withIndex("by_product", (q) =>
+              q.eq("productId", item.productId as Id<"products">),
+            )
             .first();
 
           if (!inventory || inventory.quantity < item.quantity) {
@@ -400,10 +409,10 @@ export const sendOrderNotification = tracedAction({
 export const createOrder = tracedMutation({
   name: "createOrder",
   args: {
-    customerId: v.id("customers"),
+    customerId: v.string(),
     items: v.array(
       v.object({
-        productId: v.id("products"),
+        productId: v.string(),
         quantity: v.number(),
       }),
     ),
@@ -481,8 +490,11 @@ export const createOrder = tracedMutation({
       "createOrderRecord",
       async (span) => {
         const id = await ctx.db.insert("orders", {
-          customerId,
-          items,
+          customerId: customerId as Id<"customers">,
+          items: items as {
+            productId: Id<"products">;
+            quantity: number;
+          }[],
           total,
           status: "pending",
           paymentMethod,
